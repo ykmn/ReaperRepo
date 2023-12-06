@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" name="YKMN Reaper Repository">
+
   <category name="Example">
     <reapack name="cfillion_Hello world.lua" type="script" desc="Hello world">
       <metadata>
@@ -21,6 +22,25 @@ Markdown
       </version>
     </reapack>
   </category>
+
+  <category name="PL9 Rec Timer">
+    <reapack name="PL9 - Rec Timer Tool beta0.041.eel" type="script" desc="PL9 Recording Scheduler and  Timer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Recorting scheduler and timer tool made by PlanetNine {HYPERLINK "https://forum.cockos.com/member.php?u=6549"} \par}
+
+]]></description>
+      </metadata>
+      <version name="0.041" author="PlanenNine" time="2023-12-06T17:27:32Z">
+        <source main="main">https://github.com/cfillion/reapack-repository-template/raw/58a3e39ba95bd0f35846aa1f39aa4cb2574295e1/Example/cfillion_Hello%20world.lua</source>
+      </version>
+    </reapack>
+  </category>
+
+
   <metadata>
     <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}

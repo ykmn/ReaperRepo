@@ -1,0 +1,885 @@
+// Record Timer Tool. 
+// Test beta version 0.041 - 24-Oct-2022.
+
+// Values set with mousewheel, reset with mousewheel button.
+
+// Set and arm the tracks you wish to record.
+// Remember to un-check: Prefs - Audio - Recording - "Prompt to save/delete/rename new files: ...on stop" for autonomous recording cycles.
+
+// Feel free to PM me: planetnine (http://forum.cockos.com/)
+// With any bug reports, questions, suggestions, requests, etc...
+
+// Beta0.041 24-Oct-2022
+// Some colours cleanup by ykmn@duck.com
+
+// Beta0.04 31-May-2022
+// Time Zone added
+
+// Beta0.03
+// +"Record Immediately" button sets to one hour, one cycle unless user values are in those fields
+// +"Total record cycle time" and "Finish on" times
+
+ 
+function xs(x) local(new_x)
+(
+	// calculates x-position for any font size using orig 16pt x-values
+	// -excludes 10pt LHS pad from scaling...
+	new_x=(((x-10)/16)*font_size) +10; // h_pixppt
+	new_x
+);
+
+function hw_sz(fs)
+(
+	// calculates horz window size based upon required width at font 16ppt
+	hw_size = h_pixppt*fs+20;
+	hw_size;
+);
+
+function vw_sz(fs)
+(
+	// calculates vert window size based upon required height at font 16ppt
+	vw_size = v_pixppt*fs+20;
+	vw_size;
+);
+
+	
+
+// === adjust font and window size upon mousewheel change ===
+function adjust_mousewheel_para(mouse_wheel_val)
+(
+	mouse_x <= 50 && mouse_y <= 50 ? // check mouse is in 50x50 resizing landing-zone...
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			font_size < 32 ? 
+			(
+				font_size += 1;
+			);
+		);
+	  
+		mouse_wheel_val < 0 ? 
+		(
+			(font_size > 8 ) ? 
+			(
+				font_size -= 1;
+			);
+		);
+		gfx_quit();
+		gfx_init(version_num, hw_sz(font_size), vw_sz(font_size)); // quit and reinitialise window to match font size
+		gfx_setfont(1, font_name, font_size);
+	);
+	
+	recst_zone == 1? //record start...
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recst_day_offs +=1;
+			recst_day_offs >6 ? recst_day_offs = 6;
+			recst_day = day_num + recst_day_offs; // set recst_day only when adjusting
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recst_day_offs -=1;
+			recst_day_offs <0 ? recst_day_offs = 0;
+			recst_day = day_num + recst_day_offs; // set recst_day only when adjusting
+		);
+	);
+	
+	recst_zone == 2?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recst_hours +=1;
+			recst_hours >23 ? recst_hours = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recst_hours -=1;
+			recst_hours <0 ? recst_hours = 23;
+		);
+	);
+
+	recst_zone == 3?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recst_mins +=1;
+			recst_mins >59 ? recst_mins = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recst_mins -=1;
+			recst_mins <0 ? recst_mins = 59;
+		);
+	);
+
+	recst_zone == 4?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recst_secs +=1;
+			recst_secs >59 ? recst_secs = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recst_secs -=1;
+			recst_secs <0 ? recst_secs = 59;
+		);
+	);
+	
+	recdu_zone == 2? //record duration...
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recdu_hours +=1;
+			recdu_hours >23 ? recdu_hours = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recdu_hours -=1;
+			recdu_hours <0 ? recdu_hours = 23;
+		);
+	);
+
+	recdu_zone == 3?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recdu_mins +=1;
+			recdu_mins >59 ? recdu_mins = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recdu_mins -=1;
+			recdu_mins <0 ? recdu_mins = 59;
+		);
+	);
+
+	recdu_zone == 4?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			recdu_secs +=1;
+			recdu_secs >59 ? recdu_secs = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			recdu_secs -=1;
+			recdu_secs <0 ? recdu_secs = 59;
+		);
+	);
+	
+	reccy_zone == 1? //rec cycle time...
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			reccy_days +=1;
+			reccy_days >7 ? reccy_days = 7;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			reccy_days -=1;
+			reccy_days <0 ? reccy_days = 0;
+		);
+	);
+	
+	reccy_zone == 2?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			reccy_hours +=1;
+			reccy_hours >23 ? reccy_hours = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			reccy_hours -=1;
+			reccy_hours <0 ? reccy_hours = 23;
+		);
+	);
+
+	reccy_zone == 3?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			reccy_mins +=1;
+			reccy_mins >59 ? reccy_mins = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			reccy_mins -=1;
+			reccy_mins <0 ? reccy_mins = 59;
+		);
+	);
+
+	reccy_zone == 4?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			reccy_secs +=1;
+			reccy_secs >59 ? reccy_secs = 0;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			reccy_secs -=1;
+			reccy_secs <0 ? reccy_secs = 59;
+		);
+	);
+	
+	reccy_zone == 5?
+	(
+		mouse_wheel_val > 0 ? 
+		(
+			cycles +=1;
+			cycles >100 ? cycles = 1;
+		);
+		mouse_wheel_val < 0 ? 
+		(
+			cycles -=1;
+			cycles <1 ? cycles = 100;
+		);
+	);
+	
+	mouse_wheel = 0; // reset parameter before reusing...
+);
+
+function left_clk_cap()
+(
+	mouse_cap == 1 ? 
+	(
+		mouse_state == 0 && ecp_zone == 1 ? 
+		( //detect mouse left-click on ecp zone and cycle through ecp formats...
+			mouse_state = 1; // stops re-triggering
+			ecp_count < 3 ? 
+			(
+				ecp_count += 1; 
+			):( 
+				ecp_count = 0;
+			);
+			ecp_format = ecp_count + 3; // add 3 to go from count to format
+			(ecp_count == 3) ? (ecp_format = 0); // except where count =3, format needs to be 0 (h:mm:ss.sss)
+		);
+		/*
+		mouse_state == 0 && m_zone == 1 ? // left-click and mouseover [M] ?
+		(
+			mouse_state = 1; // stops re-triggering
+			mdf_toggle == 0 ? // if toggle == 0
+			(
+				mdf_toggle = 1; // then toggle = 1
+			):(
+				mdf_toggle = 0; // else toggle = 0
+			);
+		);
+		mouse_state == 0 && bwf_zone == 1 ? // left-click and mouseover BWF offset line ?
+		(
+			mouse_state = 1; // stops re-triggering
+			bwf_toggle == 0 ? // if toggle == 0
+			(
+				bwf_toggle = 1; // then toggle = 1
+			):(
+				bwf_toggle = 0; // else toggle = 0
+			);
+		);
+		*/
+		mouse_state == 0 && eop_zone == 1 ? // left-click and cursor position line ?
+		(
+			mouse_state = 1; // stops re-triggering
+			eop_toggle == 0 ? // if toggle == 0
+			(
+				eop_toggle = 1; // then toggle = 1
+			):(
+				eop_toggle = 0; // else toggle = 0
+			);
+		);
+		mouse_state == 0 && rec_arm_zone == 1 ? // left-click and cursor position line ?
+		(
+			mouse_state = 1; // stops re-triggering
+			arm_toggle == 0 ? // if toggle == 0
+			(
+				arm_toggle = 1; // then toggle = 1
+			):(
+				arm_toggle = 0; // else toggle = 0
+			);
+		);
+		mouse_state == 0 && rec_now_zone == 1 ? // left-click and cursor position line ?
+		(
+			mouse_state = 1; // stops re-triggering
+			arm_toggle = 1; // arm record
+			recst_day = day_num; recst_hours = time_hours; recst_mins = time_mins; recst_secs = time_secs; // set rec start time to now for immediate record
+			recst_time == 0 ? ( 
+				recdu_hours = 1; recdu_mins = 0; recdu_secs = 0; // set rec dur to 1 hour
+			);
+			reccy_time == 0 ? (
+				reccy_time = 3600; // set cycle time to 1 hour
+			);
+			cycles == 0 ? cycles =1; // set single cycle
+		);
+	);
+	mouse_cap == 64 ? 
+	(
+		mouse_state == 0 && recst_zone ==1 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recst_day_offs = 0;
+			recst_day = day_num + recst_day_offs; // set recst_day only when adjusting
+		);
+		
+		mouse_state == 0 && recst_zone ==2 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recst_hours = 0;
+		);
+		
+		mouse_state == 0 && recst_zone ==3 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recst_mins = 0;
+		);
+		
+		mouse_state == 0 && recst_zone ==4 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recst_secs = 0;
+		);
+		
+		mouse_state == 0 && recdu_zone ==2 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recdu_hours = 0;
+		);
+		
+		mouse_state == 0 && recdu_zone ==3 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recdu_mins = 0;
+		);
+		
+		mouse_state == 0 && recdu_zone ==4 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			recdu_secs = 0;
+		);
+		
+		mouse_state == 0 && reccy_zone ==1 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			reccy_days = 0;
+		);
+		
+		mouse_state == 0 && reccy_zone ==2 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			reccy_hours = 0;
+		);
+		
+		mouse_state == 0 && reccy_zone ==3 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			reccy_mins = 0;
+		);
+		
+		mouse_state == 0 && reccy_zone ==4 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			reccy_secs = 0;
+		);
+		
+		mouse_state == 0 && reccy_zone ==5 ? 
+		( 
+			mouse_state = 1; // stops re-triggering
+			cycles = 0;
+		);
+		
+	);
+	mouse_cap == 0 ? (mouse_state = 0;);
+);       
+
+ 
+function show_edit_cursor_position(x, y) local(frame_size, frame_div, frame_count, frame_dev, edit_cursor_position)
+(
+	eop_toggle ==1 ? (edit_cursor_pos = GetPlayPosition()):(edit_cursor_pos = GetCursorPosition());
+	
+	gfx_x = xs(x); // update "draw x-pos to x"
+	gfx_y = y; // update "draw y-pos" to y"
+	
+	gfx_a = 0.6; gfx_r = 1; gfx_g = 1; gfx_b = 1; // set white colour
+	
+			eop_toggle == 1 ?
+			(
+				lna=0.7; lnr=0.9; lng=0.9; lnb=1.0;  // blu-wht, eop toggle on (play cursor)
+			):(
+				lna=0.6; lnr=1; lng=1; lnb=1;  // wht-wht, eop toggle off (edit cursor)
+			);
+			//gfx_a = lna; gfx_r= lnr; gfx_g = lng; gfx_b = lnb;
+			
+			eop_l =(gfx_x); eop_r = xs(x+140);
+			
+			mouse_x >= eop_l && mouse_x < eop_r && mouse_y >= y && mouse_y < y+gfx_texth ?
+			(
+				gfx_a = bla; gfx_r= blr; gfx_g = blg; gfx_b = blb;
+				eop_zone = 1;
+			):(
+				gfx_a = lna; gfx_r= lnr; gfx_g = lng; gfx_b = lnb;
+				eop_zone = 0;
+			); 
+	
+	eop_toggle ? (gfx_printf("Play Cursor Position:    ")):(gfx_printf("Edit Cursor Position:     ")); // toggle play/edit cursor annotation
+	x_ecp = gfx_x; y_ecp = gfx_y; // save ecp x+y values
+	gfx_a = lna; gfx_r= lnr; gfx_g = lng; gfx_b = lnb;
+	gfx_a = 1; // set brighter text (alpha value) - gfx_r, gfx_g and gfx_b stays the same as above
+  
+	// format "GetCursorPosition() (return) value" and store the value to "#ec_buf" string variable
+	//    the last parameter "0" here is "(h:)m:s.ms"
+	//    -this replaced by ecp_format value, for all uses here
+	format_timestr_pos(edit_cursor_pos, #ec_buf, ecp_format); // the formatted GetCursorPosition() value is stored to #ec_buf
+	gfx_measurestr(#ec_buf, w_ecp, 0);
+	
+	mouse_x > x_ecp && mouse_x < x_ecp + w_ecp && mouse_y > y_ecp && mouse_y < y_ecp + gfx_texth /*&& mouse_state == 0*/ ? 
+	(
+		ecp_zone = 1;
+		gfx_x = xs(280); // move to free space to print format message...
+		
+		ecp_format == 0 ? (
+			gfx_printf("Cursor time formatting mode:(h:)m:s.ms");
+		) : ecp_format == 1 ? (
+			gfx_printf("Cursor time formatting mode: measures.beats.time");
+		) : ecp_format == 2 ? (
+			gfx_printf("Cursor time formatting mode: measures.beats"); // unused for STPT
+		) : ecp_format == 3 ? (
+			gfx_printf("Cursor time formatting mode: seconds"); // unused for STPT
+		) : ecp_format == 4 ? (
+			gfx_printf("Cursor time formatting mode: samples");
+		) : ecp_format == 5 ? (
+			gfx_printf("Cursor time formatting mode: h:m:s:frames");
+		);
+		gfx_r = 0.5; gfx_g = 0.5; // blue mouseover
+
+		ecp_format = ecp_count + 3; // add 3 to go from count to format
+		(ecp_count == 3) ? (ecp_format = 0); // except where count =3, format needs to be 0 (h:mm:ss.sss)
+
+	):(
+		ecp_zone = 0;
+	);
+	
+	gfx_x = x_ecp; gfx_y = y_ecp; // restore ecp x+y positions...
+	
+	gfx_printf(#ec_buf);   // now it's formatted -> draw the formatted string
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 1; // white after blue mouseover
+	/*
+	gfx_a = 0.6; // dim for cd frame info...
+  
+	(edit_cursor_pos == get_cdframe_qpos(edit_cursor_pos)) ? // is ecp already at a CD frame quantised position?
+	(
+      gfx_r = 0; gfx_g = 1; gfx_b = 0; // set to green
+	):(
+	  gfx_r = 1; gfx_g = 1; gfx_b = 1; // set to white
+	);
+  
+	gfx_printf("  (nrst CD frame: ");  // print CD frame and quantised pos'n info...
+	gfx_printf("%d", get_cdframe_count(edit_cursor_pos)); 
+	gfx_printf(" at: ");
+	gfx_printf(#qec_buf);
+	gfx_printf(", dev: ");  
+	gfx_printf("%0.2f", get_cdframe_dev(edit_cursor_pos)*100);  
+	gfx_printf("%%)"); 
+	*/
+	
+	//mouse_cap == 0 ? mouse_state = 0;// : mouse_state = 1;
+
+  
+);
+
+
+function show_time_line(x, y)
+(
+	
+	//gfx_a = 0.3; gfx_r = 1; gfx_g = 1; gfx_b = 1; // grey
+	//gfx_roundrect(10,10,575,250,25,1);
+	
+	gfx_x = xs(x); // update "draw x-pos to x"
+	gfx_y = y; // update "draw y-pos" to y"
+	gfx_y += gfx_texth;
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+
+	time(time_now); //get time (granuarity to 1 sec)
+	time_now += (timezone_offset*3600); // time zone offset in hours, defined in init()
+	day_num = Floor(time_now/86400); // day num, UNIX time.
+	weekday_num = Floor(time_now / 86400) % 7; // weekday num 0 to 6, 0= Thu
+	time_hours = Floor((time_now % 86400)/3600);
+	time_mins = Floor((time_now %3600)/60);
+	time_secs = time_now %60;
+
+	gfx_printf("Today: ");
+	gfx_a = 1.0; 
+	gfx_printf("%s,   ", weekday_array[weekday_num]);
+	gfx_a = 0.7; 
+	gfx_printf("time: ");
+	gfx_a = 1.0; 
+	gfx_printf("%02d:%02d:%02d     ", time_hours, time_mins, time_secs);
+	gfx_a = 0.7; 
+	recst_day == 0 ? recst_day = day_num; // will set recst_day to today only if zero (ie init)
+	recst_day_offs = recst_day - day_num;
+	//recst_day_offs < 0 ? (recst_day_offs = 0; reclive_toggle = 0; );
+	recst_time =((recst_day)*86400) + (recst_hours*3600) + (recst_mins*60) + recst_secs;
+
+	gfx_x = xs(280);
+
+	
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 1; // white
+	gfx_printf("Simple recording");
+	gfx_x = xs(280);
+
+
+	gfx_y +=gfx_texth; 
+	recst_line = gfx_y;
+
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	gfx_printf("Start recording: ");
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	recst_dx = gfx_x;
+	recst_zone ==1 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("Today %+d ", recst_day_offs); // print day offset with sign
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	gfx_printf("(%s) at ", weekday_array[(weekday_num+recst_day_offs)%7]);
+
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	recst_hx = gfx_x;
+	recst_zone ==2 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recst_hours);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+
+	recst_mx = gfx_x;
+	recst_zone ==3 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recst_mins);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+	
+	recst_sx = gfx_x;
+	recst_zone ==4 ? (gfx_a = 1.0; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recst_secs);
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	recst_zone = 0; //reset rec start zone
+	mouse_x >= recst_dx && mouse_x < recst_dx+xs(40) && mouse_y >= recst_line && mouse_y < recst_line+gfx_texth ? recst_zone = 1; // days
+	mouse_x >= recst_hx && mouse_x < recst_hx+xs(20) && mouse_y >= recst_line && mouse_y < recst_line+gfx_texth ? recst_zone = 2; // hours
+	mouse_x >= recst_mx && mouse_x < recst_mx+xs(20) && mouse_y >= recst_line && mouse_y < recst_line+gfx_texth ? recst_zone = 3; // mins
+	mouse_x >= recst_sx && mouse_x < recst_sx+xs(20) && mouse_y >= recst_line && mouse_y < recst_line+gfx_texth ? recst_zone = 4; // secs
+	
+	recst_time <= time_now ? 
+	(
+		#time_sym ="+";
+		time_dif = time_now - recst_time;
+	):(
+		#time_sym ="-";
+		time_dif = recst_time - time_now;
+	);
+	
+	dif_day_num = Floor(time_dif/86400); // 
+	dif_time_hours = Floor((time_dif % 86400)/3600);
+	dif_time_mins = Floor((time_dif %3600)/60);
+	dif_time_secs = time_dif %60;
+	
+	gfx_y +=gfx_texth; 
+	gfx_x = xs(280);
+	gfx_printf("Time until rec: ");
+	gfx_printf("%s %dd, %02d:%02d:%02d ", #time_sym, dif_day_num, dif_time_hours, dif_time_mins, dif_time_secs);
+	
+	gfx_y +=gfx_texth; 
+
+	gfx_x = xs(280);
+	recdu_time = (recdu_hours*3600) + (recdu_mins*60) + recdu_secs;
+	recdu_line = gfx_y;
+	
+	gfx_y +=gfx_texth;
+	gfx_y +=gfx_texth;
+
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 1; // white
+	gfx_printf("Cycle recording");
+	gfx_x = xs(280);
+	gfx_y +=gfx_texth;
+	recdu_line = gfx_y;
+	recst_line = gfx_y;
+
+
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	gfx_printf("Rec segment: ");
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	recdu_hx = gfx_x;
+	recdu_zone ==2 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recdu_hours);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+	recdu_mx = gfx_x;
+	recdu_zone ==3 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recdu_mins);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+	recdu_sx = gfx_x;
+	recdu_zone ==4 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", recdu_secs);
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	rec_toggle ==1 ? ( //count + duration of record phase...
+		dur_time = time_now - (recst_time + ((cyc_count-1)*reccy_time));
+		dur_time_hours = Floor((dur_time % 86400)/3600);
+		dur_time_mins = Floor((dur_time %3600)/60);
+		dur_time_secs = dur_time %60;
+		gfx_printf("    [cyc:%d ", cyc_count);
+		gfx_a = 0.7; gfx_r = 1; gfx_g = 0; gfx_b = 0; // red
+		gfx_printf("rec:");
+		gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+		gfx_printf("+%02d:%02d:%02d] ", dur_time_hours, dur_time_mins, dur_time_secs);
+	);
+	
+	cyc_count >0 && cyc_count < cycles && rec_toggle ==0 ? ( //count - duration of cycle, not recording...
+		dur_time = (recst_time + reccy_time + ((cyc_count-1)*reccy_time))-time_now;
+		dur_time_days = Floor(dur_time/86400); // 
+		dur_time_hours = Floor((dur_time % 86400)/3600);
+		dur_time_mins = Floor((dur_time %3600)/60);
+		dur_time_secs = dur_time %60;
+		gfx_printf("    [cyc:%d rem:-", cyc_count);
+		dur_time_days !=0 ? gfx_printf("%dd, ", dur_time_days); //only print days if >0
+		gfx_printf("%02d:%02d:%02d] ", dur_time_hours, dur_time_mins, dur_time_secs);
+	);
+		
+	
+	recdu_zone = 0; //reset rec start zone
+	//mouse_x >= recdu_dx && mouse_x < recdu_dx+40 && mouse_y >= recdu_line && mouse_y < recdu_line+gfx_texth ? recdu_zone = 1; // days
+	mouse_x >= recdu_hx && mouse_x < recdu_hx+xs(20) && mouse_y >= recdu_line && mouse_y < recdu_line+gfx_texth ? recdu_zone = 2; // hours
+	mouse_x >= recdu_mx && mouse_x < recdu_mx+xs(20) && mouse_y >= recdu_line && mouse_y < recdu_line+gfx_texth ? recdu_zone = 3; // mins
+	mouse_x >= recdu_sx && mouse_x < recdu_sx+xs(20) && mouse_y >= recdu_line && mouse_y < recdu_line+gfx_texth ? recdu_zone = 4; // secs
+
+
+	reccy_time =((reccy_days)*86400) + (reccy_hours*3600) + (reccy_mins*60) + reccy_secs;
+	reccy_time < recdu_time ? reccy_time = recdu_time; // cycle at least as long as rec dur
+	
+	reccy_days = Floor(reccy_time/86400); 
+	reccy_hours = Floor((reccy_time % 86400)/3600);
+	reccy_mins = Floor((reccy_time %3600)/60);
+	reccy_secs = reccy_time %60;
+
+	
+	gfx_y +=gfx_texth;
+	gfx_x = xs(280);
+	reccy_line = gfx_y;
+	gfx_printf("Cycle time: ");
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	reccy_dx = gfx_x;
+	reccy_zone ==1 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%dd ", reccy_days);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	//gfx_printf("(%s)  ", weekday_array[(weekday_num+recst_day_offs)%7]);
+	reccy_hx = gfx_x;
+	reccy_zone ==2 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", reccy_hours);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+	reccy_mx = gfx_x;
+	reccy_zone ==3 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", reccy_mins);
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	gfx_printf(":");
+	reccy_sx = gfx_x;
+	reccy_zone ==4 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", reccy_secs);
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	gfx_printf("    Cycles: ");
+	gfx_a = 1; gfx_r = 1; gfx_g = 1; gfx_b = 0; // bright yellow
+	reccy_cx = gfx_x;
+	reccy_zone ==5 ? (gfx_a = 1; gfx_r = 0.5; gfx_g = 0.5; gfx_b = 1.0; ); // highlight blue
+	gfx_printf("%02d", cycles);
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	
+	
+	reccy_zone = 0; //reset rec start zone
+	mouse_x >= reccy_dx && mouse_x < reccy_dx+xs(40) && mouse_y >= reccy_line && mouse_y < reccy_line+gfx_texth ? reccy_zone = 1; // days
+	mouse_x >= reccy_hx && mouse_x < reccy_hx+xs(20) && mouse_y >= reccy_line && mouse_y < reccy_line+gfx_texth ? reccy_zone = 2; // hours
+	mouse_x >= reccy_mx && mouse_x < reccy_mx+xs(20) && mouse_y >= reccy_line && mouse_y < reccy_line+gfx_texth ? reccy_zone = 3; // mins
+	mouse_x >= reccy_sx && mouse_x < reccy_sx+xs(20) && mouse_y >= reccy_line && mouse_y < reccy_line+gfx_texth ? reccy_zone = 4; // secs
+	mouse_x >= reccy_cx && mouse_x < reccy_cx+xs(20) && mouse_y >= reccy_line && mouse_y < reccy_line+gfx_texth ? reccy_zone = 5; // cycles
+	
+	gfx_y +=gfx_texth; 
+	gfx_x = xs(280);
+	
+	totrec_time = (reccy_time * (cycles-1)) + recdu_time; // total recording cycle time
+	finrec_time = recst_time + totrec_time; // finish time
+	
+	totrec_days = Floor(totrec_time/86400); 
+	totrec_hours = Floor((totrec_time % 86400)/3600);
+	totrec_mins = Floor((totrec_time %3600)/60);
+	totrec_secs = totrec_time %60;
+	
+	finrec_wkdn = Floor(finrec_time/86400) % 7; // weekday num 0 to 6, 0= Thu
+	finrec_days = Floor(finrec_time/86400); 
+	finrec_hours = Floor((finrec_time % 86400)/3600);
+	finrec_mins = Floor((finrec_time %3600)/60);
+	finrec_secs = finrec_time %60;
+	
+	gfx_printf("Total recording cycles time: ");
+	totrec_days ? gfx_printf("%dd, ", totrec_days);
+	gfx_printf("%d:%02d:%02d  ", totrec_hours, totrec_mins, totrec_secs);
+	
+	gfx_y +=gfx_texth;  gfx_x = xs(280);
+	gfx_printf("Cycles finish on: ");
+	gfx_printf("%+dd (%s) ", finrec_days-day_num, weekday_array[finrec_wkdn]);
+	gfx_printf("%d:%02d:%02d ", finrec_hours, finrec_mins, finrec_secs);
+	
+	
+	gfx_y +=gfx_texth; 
+	gfx_y +=gfx_texth;
+	
+	#riut = "";
+	#riuc = "";
+	recdu_time ? (
+		recdu_hours ? sprintf(#riut, "%s%dh", #riut, recdu_hours);
+		recdu_mins ? sprintf(#riut, "%s%02dm", #riut, recdu_mins);
+		recdu_secs ? sprintf(#riut, "%s%02ds", #riut, recdu_secs);
+	):(
+		#riut = "1hr";
+	);
+	cycles ? (
+		sprintf(#riuc, "%dcyc", cycles);
+	):(
+		#riuc = "1cyc"
+	);
+	
+	
+	gfx_x = xs(60);
+	rec_now_line = gfx_y;
+	rec_now_lx = gfx_x;
+	gfx_r = 1.0; gfx_g = 0; gfx_b = 0;
+	rec_now_zone ==1 ? (
+		gfx_a = 1; 
+		gfx_printf("REC NOW! (%s-%s) ", #riut, #riuc);
+	):(
+		gfx_a = 0.8;
+		gfx_printf("Rec Immediately ");
+	);
+	rec_now_zone = 0; //reset rec arm zone
+	mouse_x >= rec_now_lx && mouse_x < rec_now_lx+100 && mouse_y >= rec_now_line && mouse_y < rec_now_line+gfx_texth ? rec_now_zone = 1; // rec arm
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	gfx_x = xs(280);
+	rec_arm_line = gfx_y;
+	rec_arm_lx = gfx_x;
+	rec_arm_zone ? gfx_a = 1.0 : gfx_a = 0.7; 
+	arm_toggle ==1 ?
+	(
+		gfx_r = 1; gfx_g = 0; gfx_b = 0; // red
+		gfx_printf("REC ARM ON        ");
+	):(
+		gfx_r = 0; gfx_g = 1; gfx_b = 0; // green
+		gfx_printf("Rec Arm Off           ");
+	);
+	gfx_a = 0.7;        
+
+	rec_arm_zone = 0; //reset rec arm zone
+	mouse_x >= rec_arm_lx && mouse_x < rec_arm_lx+xs(80) && mouse_y >= rec_arm_line && mouse_y < rec_arm_line+gfx_texth ? rec_arm_zone = 1; // rec arm
+		
+	
+	cyc_count = floor((time_now - recst_time) / reccy_time) + 1; //check cycle according to time
+	cyc_count > 0 && cyc_count <=cycles ? //reached rec st time & within req cycles?
+	(
+		arm_toggle==1 && time_now >= (recst_time + ((cyc_count-1)*reccy_time)) && time_now < (recst_time + recdu_time + ((cyc_count-1)*reccy_time)) ? 
+		(
+			gfx_a = 0.7; gfx_r = 1; gfx_g = 0; gfx_b = 0; // red
+			gfx_printf("REC ON [cyc:%d]", cyc_count);
+			rec_toggle ==0 ? (rec_toggle = 1; Main_OnCommandEx(1013, 0, 0); );// Transport: Record
+		):(
+			gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+			 gfx_printf("Rec Off [cyc:%d]", cyc_count);
+			rec_toggle ==1 ? (rec_toggle = 0; Main_OnCommandEx(40044, 0, 0); SetEditCurPos2(0, GetCursorPosition() + recdu_time, 1, 0); );// Transport: Play/Stop & move ECP
+		);
+	):(
+		gfx_a = 0.7; gfx_r = 0; gfx_g = 1; gfx_b = 0; // green
+		gfx_printf("Rec Off");
+		rec_toggle ==1 ? (rec_toggle = 0; Main_OnCommandEx(40044, 0, 0); SetEditCurPos2(0, GetCursorPosition() + recdu_time, 1, 0); );// Transport: Play/Stop & move ECP
+	);
+	
+	gfx_a = 0.7; gfx_r = 1; gfx_g = 1; gfx_b = 0; // yellow
+	
+	
+);
+
+
+
+// this function runs in a loop - "sel_item" and "active_take" variables are updated at each iteration
+// variables are "local variables" - it's easier to "keep the namespace clean"
+function main() local(sel_item, active_take)
+( 
+	// get first selected item's pointer (at index 0) - returns 0 if nothing is selected
+	// pointer is an integer value (and >0)
+	sel_item = GetSelectedMediaItem(0, 0);
+  
+	// get active take's pointer from selected item  - returns 0 if there are no takes in item
+	// pointer is an integer value (and >0)
+	active_take = GetActiveTake(sel_item);
+  
+	// set font size (and window, x-placement, etc)
+	mouse_wheel != 0 ? adjust_mousewheel_para(mouse_wheel);
+  
+  
+	//// Calling the "drawing" functions ////
+	// call "function(x, y, item_pointer, take_pointer)"
+  
+	show_edit_cursor_position(10, 10);
+	//show_source_time_position(10, gfx_y + gfx_texth, sel_item, active_take);
+	//show_source_length(10, gfx_y + gfx_texth, sel_item, active_take);
+	show_time_line(10, gfx_y + gfx_texth);
+	left_clk_cap(); // capture mouse left-click and interpret...
+  
+	// -> update GUI window
+	gfx_update(); 
+	// "main" function is running in a loop -> it jumps back to the start of the "main" function here
+	gfx_getchar() >= 0 ? defer("main();");
+);
+
+function outer_loop()
+(
+	main();
+	gfx_update(); 
+	gfx_getchar() >= 0 ? defer("outer_loop();");
+);
+
+
+
+// this function is called first
+function init()
+(
+	// initialize GUI: gfx_init(window title, width, height)
+	version_num = "PL9: Record Timer Tool beta0.041";
+	font_name = "Calibri";
+	font_size = 24;
+	h_pixppt = 36; v_pixppt = 15; // was 36.25 & 15
+	gfx_init(version_num, hw_sz(font_size), vw_sz(font_size)); 
+	gfx_setfont(1,font_name, font_size); 
+	// set font at index 1: gfx_setfont(index, font name, size in pixels)
+	ecp_format = 0; ecp_count = 3;
+	cycles = 1;
+
+	timezone_offset = 3; // Time Zone in hours from UTC
+	
+	#my_array1="Friday"; // load weekday array with days of week strings...
+	#my_array2="Saturday";
+	#my_array3="Sunday";
+	#my_array4="Monday";
+	#my_array5="Tuesday";
+	#my_array6="Wednesday";
+	#my_array0="Thursday";
+	
+	weekday_array = 1000; // weekday_array name array offset
+	weekday_array[0] = #my_array0;       // pointers to global string variables...
+	weekday_array[1] = #my_array1; 
+	weekday_array[2] = #my_array2;
+	weekday_array[3] = #my_array3;
+	weekday_array[4] = #my_array4;
+	weekday_array[5] = #my_array5;
+	weekday_array[6] = #my_array6;
+
+);
+
+//// Call the functions ////
+init();
+main();
